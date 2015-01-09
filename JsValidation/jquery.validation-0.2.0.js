@@ -13,7 +13,7 @@
         onsubmit: true,
         onchangeElements: ['select', 'checkbox'],
         onkeyupElements: ['text', 'textarea'],
-        errorList: [],
+        errorList: [], //list of elements with validation failures.
         errorMap: {}
     };
 
@@ -35,21 +35,23 @@
         // the init function will need to check the validity of all required elements.
         validation: function() {
             var $this = this;
+            this.options.errorList = [];
             //loop through all elements
             $.each(this.options.rules, function(element, value) {
                 var element = $("#" + element);
                 $this.checkValidity(element);
+                $this.updateErrorList(element);
             });
-
-            return $this.formValid();
+            console.log(this.options);
         },
 
         // Validate a single element
         checkValidity: function(element) {
             var $this = this;
+
             $.each(element.data("rules"), function(ruleType, details) {
-                console.log(ruleType);
                 console.log(details);
+
                 var value = $this.elementValue(element);
                 element.data("rules")[ruleType].valid = $this.validateRule(ruleType, value);
             });
@@ -67,6 +69,29 @@
             }
         },
 
+        //If an elements rule is valid == false then it should be added to the errorMap.
+        updateErrorList: function(element) {
+            var $this = this;
+            var failure = false;
+
+            $.each(element.data("rules"), function(ruleType, details) {
+                if(!element.data("rules")[ruleType].valid) {
+                    failure = true;
+                }
+            });
+
+            if(failure) {
+                this.options.errorList.push(element.prop("id"));
+            }
+            else{
+                var index = this.options.errorList.indexOf(element.prop("id")); 
+                if(index > 0) {
+                    this.options.errorList.splice(index, 1);
+                }
+            }
+           
+        },
+
         // If any error remain form is still invalid.
         formValid: function() {
             return this.options.errorList.length === 0;
@@ -82,7 +107,8 @@
 
                 if (!$this.validinputtype(input)){
                     console.log(inputType + " is not a valid form element, please alter your configuration.");
-                    return false;
+                    $this.removeRule(input.prop("id"));
+                    return;
                 }
 
                 // Apply rules to the input.
@@ -112,6 +138,12 @@
             return validationRules;
         },
 
+        // Delete the rules for a given input (usually this will be to ignore invalid element assignments 
+        // when the plugin is instatntiated)
+        removeRule: function(input) {
+            delete this.options.rules[input];
+        },
+
         // Based on the input type set the event handlers.
         seteventhandler: function(input, inputType) {
             console.log("set event handler for: " + inputType );
@@ -127,7 +159,7 @@
 
             if ($.inArray(inputType, this.options.onkeyupElements) === 0) {
                 input.on(
-                    "keyup", 
+                    "keyup blur", 
                     function() {
                         $this.onkeyup(input)
                     });
@@ -144,11 +176,19 @@
 
         // The onsubmit event
         onsubmit:function(event, element) {
+            //If debug mode set then never submit the form.
             if (this.options.debug) {
                 event.preventDefault();
             } 
-            //validate whole form.
-            this.validation();             
+ 
+            this.validation();
+            // If the form is not valid do not submit.
+
+            if(!this.formValid()){
+                event.preventDefault();
+                return false;
+            }
+    
         },
 
         // The onkeyup event
@@ -195,18 +235,21 @@
             if ( typeof val === "string" ) {
                 return val.replace(/\r/g, "" );
             }
-            return "test val";
+
+            return val;
         },
 
+        // Methods to check inputs value is correct.
         methods: {
             required: function(value) {
-                console.log($.trim( value ).length);
-
                 return $.trim( value ).length > 0;
+            },
+
+            number: function(value) {
+                console.log(value);
+                return false;
             }
-
         }
-
     };
 
     // A really lightweight plugin wrapper around the constructor, 
