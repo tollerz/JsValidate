@@ -6,7 +6,7 @@
 
     defaults = {
         rules: {},
-    	validationError: "validationError",
+        validationError: "validationError",
         debug: true,
         onchange: false,
         valid: false,
@@ -19,12 +19,12 @@
 
     // create the validate class
     function Validate( form, options) {
-    	this.$form = $(form);
+        this.$form = $(form);
 
-    	this.options = $.extend( {}, defaults, options);
+        this.options = $.extend( {}, defaults, options);
 
-    	this._defaults = defaults;
-    	this._name = validate;
+        this._defaults = defaults;
+        this._name = validate;
         
         return this;
     }
@@ -33,7 +33,7 @@
     // This contains all the methods that can be called by all instances of the class.
     Validate.prototype = {
         // the init function will need to check the validity of all required elements.
-    	validation: function() {
+        validation: function() {
             var $this = this;
             //loop through all elements
             $.each(this.options.rules, function(element, value) {
@@ -42,14 +42,29 @@
             });
 
             return $this.formValid();
-    	},
+        },
 
         // Validate a single element
         checkValidity: function(element) {
+            var $this = this;
             $.each(element.data("rules"), function(ruleType, details) {
                 console.log(ruleType);
                 console.log(details);
+                var value = $this.elementValue(element);
+                element.data("rules")[ruleType].valid = $this.validateRule(ruleType, value);
             });
+        },
+
+        // validate a single rule for the given element.
+        validateRule: function(ruleType, value) {
+            switch(ruleType){
+                case 'required':
+                    return this.methods.required(value);
+                break;
+
+                default:
+                    return true;
+            }
         },
 
         // If any error remain form is still invalid.
@@ -163,7 +178,35 @@
             }
             
             return type; 
+        },
+
+        // Return the value of the given form element.
+        elementValue: function(element) {
+            var val,
+            $element = $( element ),
+            type = element.type;
+
+            if ( type === "radio" || type === "checkbox" ) {
+                return $( "input[name='" + element.name + "']:checked" ).val();
+            } 
+
+            val = $element.val();
+
+            if ( typeof val === "string" ) {
+                return val.replace(/\r/g, "" );
+            }
+            return "test val";
+        },
+
+        methods: {
+            required: function(value) {
+                console.log($.trim( value ).length);
+
+                return $.trim( value ).length > 0;
+            }
+
         }
+
     };
 
     // A really lightweight plugin wrapper around the constructor, 
