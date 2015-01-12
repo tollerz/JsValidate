@@ -15,7 +15,7 @@
         onkeyupElements: ['text', 'textarea'],
         errorList: [], //list of elements with validation failures.
         errorMap: {},
-        errorMessage: $("<div class='alert alert-danger' id='errorMessage'></div>")
+        errorMessage: $("<span class='alert alert-danger' id='errorMessage'></span>")
     };
 
     // create the validate class
@@ -43,8 +43,6 @@
                 $this.checkValidity(element);
                 $this.updateErrorList(element);
             });
-
-            console.log(this.options);
         },
 
         // Validate a single element
@@ -55,7 +53,7 @@
                 var value = $this.elementValue(element);
                 element.data("rules")[ruleType].valid = $this.validateRule(ruleType, value);
             });
-
+            $this.updateErrorList(element);
             $this.displayErrors(element);
         },
 
@@ -65,7 +63,8 @@
                 case 'required':
                     return this.methods.required(value);
                 break;
-
+                case 'number':
+                    return this.methods.number(value);
                 default:
                     return false;
             }
@@ -99,18 +98,25 @@
         displayErrors: function(element) {
             var $this = this;
             var selector = element.prop("id");
+            var errorEnabled = false;
 
-            element.prev("#errorMessage").remove();
-            $this.options.errorMessage = $("<div class='alert alert-danger' id='errorMessage'></div>");
+            this.reset(element);
 
             if ($.inArray(selector, this.options.errorList) >= 0) {
                 $.each(element.data("rules"), function(ruleType, details) {
-                    if (!details.valid) {
+                    if (!details.valid && !errorEnabled) {
                         var errorMessage = $this.options.errorMessage;
-                        ((errorMessage).append(details.message)).insertBefore(element);
+                        element.parent().append((errorMessage).append(details.message));
+                        errorEnabled = true;
                     }
-                })
+                }) 
             }
+        },
+
+        // Reset the error details for an element.
+        reset: function(element) {
+            element.next("#errorMessage").remove();
+            this.options.errorMessage = $("<span class='label alert-danger' id='errorMessage'></span>");
         },
 
         // If any error remain form is still invalid.
@@ -167,7 +173,6 @@
 
         // Based on the input type set the event handlers.
         seteventhandler: function(input, inputType) {
-            console.log("set event handler for: " + inputType );
             var $this = this;
             // set event types based on the element type.
             if ($.inArray(inputType, this.options.onchangeElements) === 0) {
@@ -267,8 +272,7 @@
             },
 
             number: function(value) {
-                console.log(value);
-                return false;
+                return /^-?(?:\d+|\d{1,3}(?:,\d{3})+)?(?:\.\d+)?$/.test( value );
             }
         }
     };
