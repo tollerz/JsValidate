@@ -14,7 +14,8 @@
         onchangeElements: ['select', 'checkbox'],
         onkeyupElements: ['text', 'textarea'],
         errorList: [], //list of elements with validation failures.
-        errorMap: {}
+        errorMap: {},
+        errorMessage: $("<div class='alert alert-danger' id='errorMessage'></div>")
     };
 
     // create the validate class
@@ -42,6 +43,7 @@
                 $this.checkValidity(element);
                 $this.updateErrorList(element);
             });
+
             console.log(this.options);
         },
 
@@ -50,11 +52,11 @@
             var $this = this;
 
             $.each(element.data("rules"), function(ruleType, details) {
-                console.log(details);
-
                 var value = $this.elementValue(element);
                 element.data("rules")[ruleType].valid = $this.validateRule(ruleType, value);
             });
+
+            $this.displayErrors(element);
         },
 
         // validate a single rule for the given element.
@@ -65,7 +67,7 @@
                 break;
 
                 default:
-                    return true;
+                    return false;
             }
         },
 
@@ -80,16 +82,35 @@
                 }
             });
 
+            var errorList = this.options.errorList;
+
             if(failure) {
-                this.options.errorList.push(element.prop("id"));
+                errorList.push(element.prop("id"));
             }
             else{
-                var index = this.options.errorList.indexOf(element.prop("id")); 
+                var index = errorList.indexOf(element.prop("id")); 
                 if(index > 0) {
-                    this.options.errorList.splice(index, 1);
+                    errorList.splice(index, 1);
                 }
             }
-           
+        },
+
+        // Display errors for all failed fields.
+        displayErrors: function(element) {
+            var $this = this;
+            var selector = element.prop("id");
+
+            element.prev("#errorMessage").remove();
+            $this.options.errorMessage = $("<div class='alert alert-danger' id='errorMessage'></div>");
+
+            if ($.inArray(selector, this.options.errorList) >= 0) {
+                $.each(element.data("rules"), function(ruleType, details) {
+                    if (!details.valid) {
+                        var errorMessage = $this.options.errorMessage;
+                        ((errorMessage).append(details.message)).insertBefore(element);
+                    }
+                })
+            }
         },
 
         // If any error remain form is still invalid.
@@ -180,7 +201,7 @@
             if (this.options.debug) {
                 event.preventDefault();
             } 
- 
+
             this.validation();
             // If the form is not valid do not submit.
 
