@@ -105,12 +105,13 @@
             var $this = this;
             var selector = element.prop("id");
             var errorEnabled = false;
+            var formatElement = element;
 
             if ($(element).prop('tagName').toLowerCase() === 'select' && (element.prev('div').hasClass('select2-container'))) {
-                element = $(element.prev('div'));
+                formatElement = $(element.prev('div'));
             }
 
-            $this.reset(element);
+            $this.reset(formatElement);
             
             if ($.inArray(selector, this.options.errorList) >= 0) {
                 $.each(element.data("rules"), function(ruleType, details) {
@@ -118,8 +119,8 @@
                     if (!details.valid && !errorEnabled) {
                         var errorMessage = $this.options.errorMessage;
 
-                        element.parent().append((errorMessage).append(details.message));
-                        element.css("border", "2px solid #b94a48");
+                        formatElement.parent().append((errorMessage).append(details.message));
+                        formatElement.css("border", "2px solid #b94a48");
 
                         errorEnabled = true;
                     } 
