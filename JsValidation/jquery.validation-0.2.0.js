@@ -100,17 +100,21 @@
         },
 
         // Display errors for all failed fields.
+        // take into account select2 inputs.
         displayErrors: function(element) {
             var $this = this;
             var selector = element.prop("id");
             var errorEnabled = false;
 
+            if ($(element).prop('tagName').toLowerCase() === 'select' && (element.prev('div').hasClass('select2-container'))) {
+                element = $(element.prev('div'));
+            }
+
+            $this.reset(element);
+            
             if ($.inArray(selector, this.options.errorList) >= 0) {
                 $.each(element.data("rules"), function(ruleType, details) {
-                    if ($(element).prop('tagName').toLowerCase() === 'select' && (element.prev('div').hasClass('select2-container'))) {
-                        element = $(element.prev('div'));
-                    }  
-                    $this.reset(element);
+
                     if (!details.valid && !errorEnabled) {
                         var errorMessage = $this.options.errorMessage;
 
