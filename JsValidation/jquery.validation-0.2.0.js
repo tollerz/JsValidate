@@ -112,12 +112,22 @@
                     if (!details.valid && !errorEnabled) {
                         var errorMessage = $this.options.errorMessage;
                         element.parent().append((errorMessage).append(details.message));
-                        element.css("border", "2px solid #b94a48");
+                        this.inputErrorFormat(element);
                         errorEnabled = true;
                     }
                 }) 
             }
         },
+
+        // Add css formatting to input element.
+        inputErrorFormat: function(element) {
+            //need to cover select2 effects on select boxes.
+            if (element.prop('tagName').toLowerCase() === 'select' && (element.prev('div').hasClass('select2-container'))) {
+                element = $(element.prev('div'));
+            }
+
+            element.css("border", "2px solid #b94a48");
+        }
 
         // Reset the error details for an element.
         reset: function(element) {
