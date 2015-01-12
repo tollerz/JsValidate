@@ -21,12 +21,12 @@
     // create the validate class
     function Validate( form, options) {
         this.$form = $(form);
-
+        
         this.options = $.extend( {}, defaults, options);
 
         this._defaults = defaults;
         this._name = validate;
-        
+
         return this;
     }
 
@@ -36,10 +36,13 @@
         // the init function will need to check the validity of all required elements.
         validation: function() {
             var $this = this;
+            var form = this.$form;
             this.options.errorList = [];
+
             //loop through all elements
             $.each(this.options.rules, function(element, value) {
-                var element = $("#" + element);
+                var element = $(form.find("#" + element));
+                
                 $this.checkValidity(element);
                 $this.updateErrorList(element);
             });
@@ -53,6 +56,7 @@
                 var value = $this.elementValue(element);
                 element.data("rules")[ruleType].valid = $this.validateRule(ruleType, value);
             });
+
             $this.updateErrorList(element);
             $this.displayErrors(element);
         },
@@ -63,6 +67,7 @@
                 case 'required':
                     return this.methods.required(value);
                 break;
+
                 case 'number':
                     return this.methods.number(value);
                 default:
@@ -129,7 +134,8 @@
             var $this = this;
             // will need to check the elements that are in the options and bind change events to them.
             $.each(this.options.rules, function(input, rules){
-                var input = $("#" + input);
+                var form = $this.$form;
+                var input = $(form.find("#" + input));
                 var inputType = $this.inputtype(input);
 
                 if (!$this.validinputtype(input)){
@@ -137,10 +143,8 @@
                     $this.removeRule(input.prop("id"));
                     return;
                 }
-
                 // Apply rules to the input.
                 input.data("rules", $this.setrules(rules));
-
                 $this.seteventhandler(input, inputType);
             });
 
@@ -262,7 +266,7 @@
                 return val.replace(/\r/g, "" );
             }
 
-            return val; 
+            return val;
         },
 
         // Methods to check inputs value is correct.
@@ -282,7 +286,7 @@
     $.fn[validate] = function ( options ) {
         return this.each(function () {
             if (!$.data(this, "validate")) {
-                var validate = $.data(this, "validate", new Validate( this, options ));
+                var validate = $.data(this, "validate", new Validate( this, options));
             }
 
             validate.setuprules();
