@@ -15,7 +15,7 @@
         onkeyupElements: ['text', 'textarea'],
         errorList: [], //list of elements with validation failures.
         errorMap: {},
-        errorMessage: $("<span class='alert alert-danger' id='errorMessage'></span>")
+        errorMessage: $("<span class='label alert-danger' id='errorMessage'></span>")
     };
 
     // create the validate class
@@ -105,33 +105,29 @@
             var selector = element.prop("id");
             var errorEnabled = false;
 
-            this.reset(element);
-
             if ($.inArray(selector, this.options.errorList) >= 0) {
                 $.each(element.data("rules"), function(ruleType, details) {
+                    if ($(element).prop('tagName').toLowerCase() === 'select' && (element.prev('div').hasClass('select2-container'))) {
+                        element = $(element.prev('div'));
+                    }  
+                    $this.reset(element);
                     if (!details.valid && !errorEnabled) {
                         var errorMessage = $this.options.errorMessage;
+
                         element.parent().append((errorMessage).append(details.message));
-                        this.inputErrorFormat(element);
+                        element.css("border", "2px solid #b94a48");
+
                         errorEnabled = true;
-                    }
+                    } 
                 }) 
             }
         },
 
-        // Add css formatting to input element.
-        inputErrorFormat: function(element) {
-            //need to cover select2 effects on select boxes.
-            if (element.prop('tagName').toLowerCase() === 'select' && (element.prev('div').hasClass('select2-container'))) {
-                element = $(element.prev('div'));
-            }
-
-            element.css("border", "2px solid #b94a48");
-        }
-
-        // Reset the error details for an element.
+        // Reset the error details against a given element.
+        // since the error element is currently displayed at the same level as the input
+        // the parent element is used to find the #errorMessage element for removal.
         reset: function(element) {
-            element.next("#errorMessage").remove();
+            element.parent().find("#errorMessage").remove();
             this.options.errorMessage = $("<span class='label alert-danger' id='errorMessage'></span>");
             element.attr("style", "");
         },
