@@ -262,7 +262,7 @@
                 return val.replace(/\r/g, "" );
             }
 
-            return val;
+            return val; 
         },
 
         // Methods to check inputs value is correct.
