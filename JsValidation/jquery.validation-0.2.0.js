@@ -112,6 +112,7 @@
                     if (!details.valid && !errorEnabled) {
                         var errorMessage = $this.options.errorMessage;
                         element.parent().append((errorMessage).append(details.message));
+                        element.addClass("inputError");
                         errorEnabled = true;
                     }
                 }) 
@@ -122,6 +123,7 @@
         reset: function(element) {
             element.next("#errorMessage").remove();
             this.options.errorMessage = $("<span class='label alert-danger' id='errorMessage'></span>");
+            element.removeClass("inputError");
         },
 
         // If any error remain form is still invalid.
@@ -288,6 +290,8 @@
             if (!$.data(this, "validate")) {
                 var validate = $.data(this, "validate", new Validate( this, options));
             }
+
+            var inputStyle = $("<style type='text/css'> .inputError{ border:2px solid #b94a48;} </style>").appendTo("head");
 
             validate.setuprules();
         });
