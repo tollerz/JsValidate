@@ -1,13 +1,12 @@
-'use strict';
 ;(function($, window, document, undefined) {
     // Variables only created once.
 
     // Name of the plugin
-    var validate = 'validate',  
+    var validate = "validate",  
 
     defaults = {
         rules: {},
-        validationError: 'validationError',
+        validationError: "validationError",
         debug: true,
         onchange: false,
         valid: false,
@@ -16,7 +15,7 @@
         onkeyupElements: ['text', 'textarea'],
         errorList: [], //list of elements with validation failures.
         errorMap: {},
-        errorMessage: $('<span class="label alert-danger" id="errorMessage"></span>')
+        errorMessage: $("<span class='label alert-danger' id='errorMessage'></span>")
     };
 
     // create the validate class
@@ -34,6 +33,7 @@
     // Prototype the validate class
     // This contains all the methods that can be called by all instances of the class.
     Validate.prototype = {
+
         // the init function will need to check the validity of all required elements.
         validation: function() {
             var $this = this;
@@ -42,7 +42,7 @@
 
             //loop through all elements
             $.each(this.options.rules, function(element, value) {
-                var element = $(form.find('#' + element));
+                var element = $(form.find("#" + element));
                 
                 $this.checkValidity(element);
                 $this.updateErrorList(element);
@@ -53,9 +53,9 @@
         checkValidity: function(element) {
             var $this = this;
 
-            $.each(element.data('rules'), function(ruleType, details) {
+            $.each(element.data("rules"), function(ruleType, details) {
                 var value = $this.elementValue(element);
-                element.data('rules')[ruleType].valid = $this.validateRule(ruleType, value);
+                element.data("rules")[ruleType].valid = $this.validateRule(ruleType, value, element);
             });
 
             $this.updateErrorList(element);
@@ -63,26 +63,18 @@
         },
 
         // validate a single rule for the given element.
-        validateRule: function(ruleType, value) {
-            switch(ruleType){
-                case 'required':
-                    return this.methods.required(value);
-                break;
-
-                case 'number':
-                    return this.methods.number(value);
-                break;
-                default:
-                    return false;
-            }
+        validateRule: function(ruleType, value, element) {
+            var parameter = this.options.rules[element.prop("id")][ruleType]
+            return this.methods[ruleType](value, element, parameter);
         },
 
         //If an elements rule is valid == false then it should be added to the errorMap.
         updateErrorList: function(element) {
+            var $this = this;
             var failure = false;
 
-            $.each(element.data('rules'), function(ruleType, details) {
-                if(!element.data('rules')[ruleType].valid) {
+            $.each(element.data("rules"), function(ruleType, details) {
+                if(!element.data("rules")[ruleType].valid) {
                     failure = true;
                 }
             });
@@ -90,10 +82,10 @@
             var errorList = this.options.errorList;
 
             if(failure) {
-                errorList.push(element.prop('id'));
+                errorList.push(element.prop("id"));
             }
             else{
-                var index = errorList.indexOf(element.prop('id')); 
+                var index = errorList.indexOf(element.prop("id")); 
                 if(index > 0) {
                     errorList.splice(index, 1);
                 }
@@ -104,7 +96,7 @@
         // take into account select2 inputs.
         displayErrors: function(element) {
             var $this = this;
-            var selector = element.prop('id');
+            var selector = element.prop("id");
             var errorEnabled = false;
             var formatElement = element;
 
@@ -115,17 +107,17 @@
             $this.reset(formatElement);
             
             if ($.inArray(selector, this.options.errorList) >= 0) {
-                $.each(element.data('rules'), function(ruleType, details) {
+                $.each(element.data("rules"), function(ruleType, details) {
 
                     if (!details.valid && !errorEnabled) {
                         var errorMessage = $this.options.errorMessage;
 
                         formatElement.parent().append((errorMessage).append(details.message));
-                        formatElement.css('border', '2px solid #b94a48');
+                        formatElement.css("border", "2px solid #b94a48");
 
                         errorEnabled = true;
                     } 
-                }); 
+                }) 
             }
         },
 
@@ -133,9 +125,9 @@
         // since the error element is currently displayed at the same level as the input
         // the parent element is used to find the #errorMessage element for removal.
         reset: function(element) {
-            element.parent().find('#errorMessage').remove();
-            this.options.errorMessage = $('<span class="label alert-danger" id="errorMessage"></span>');
-            element.attr('style', '');
+            element.parent().find("#errorMessage").remove();
+            this.options.errorMessage = $("<span class='label alert-danger' id='errorMessage'></span>");
+            element.attr("style", "");
         },
 
         // If any error remain form is still invalid.
@@ -149,22 +141,22 @@
             // will need to check the elements that are in the options and bind change events to them.
             $.each(this.options.rules, function(input, rules){
                 var form = $this.$form;
-                var input = $(form.find('#' + input));
+                var input = $(form.find("#" + input));
                 var inputType = $this.inputtype(input);
 
                 if (!$this.validinputtype(input)){
-                    console.log(inputType + ' is not a valid form element, please alter your configuration.');
-                    $this.removeRule(input.prop('id'));
+                    console.log(inputType + " is not a valid form element, please alter your configuration.");
+                    $this.removeRule(input.prop("id"));
                     return;
                 }
                 // Apply rules to the input.
-                input.data('rules', $this.setrules(rules));
+                input.data("rules", $this.setrules(rules));
                 $this.seteventhandler(input, inputType);
             });
 
             // Setup event handler for on submit
             if (this.options.onsubmit === true) {
-                $this.seteventhandler(this.$form, 'submit');
+                $this.seteventhandler(this.$form, "submit");
             }
         },
 
@@ -177,7 +169,7 @@
                 validationRules[element] = {
                             'message': value,
                             'valid'  : false
-                         };
+                         }
             });
 
             return validationRules;
@@ -195,31 +187,31 @@
             // set event types based on the element type.
             if ($.inArray(inputType, this.options.onchangeElements) === 0) {
                 input.on(
-                    'change', 
+                    "change", 
                     function() {
-                        $this.onchange(input);
+                        $this.onchange(input)
                     });
             }
 
             if ($.inArray(inputType, this.options.onkeyupElements) === 0) {
                 input.on(
-                    'keyup blur', 
+                    "keyup blur", 
                     function() {
-                        $this.onkeyup(input);
+                        $this.onkeyup(input)
                     });
             }
 
             if (inputType === 'submit'){
                 input.on(
-                    'submit',
+                    "submit",
                     function( event ) {
-                        $this.onsubmit(event);
+                        $this.onsubmit(event, input)
                     });
             }
         },
 
         // The onsubmit event
-        onsubmit:function(event) {
+        onsubmit:function(event, element) {
             //If debug mode set then never submit the form.
             if (this.options.debug) {
                 event.preventDefault();
@@ -232,7 +224,6 @@
                 event.preventDefault();
                 return false;
             }
-    
         },
 
         // The onkeyup event
@@ -247,18 +238,18 @@
 
         // Check if the element is a valid input type for a form.
         validinputtype: function(element) {
-            return element.is('select, input, textarea');
+            return element.is("select, input, textarea");
         },
 
         // Return the input type as a string.
         inputtype: function(element) {
-            var type = '';
+            var type = "";
 
             type = $(element).prop('tagName').toLowerCase();
 
             // If an input, get the input type.
-            if (type === 'input'){
-                return $(element).prop('type');
+            if (type === "input"){
+                return $(element).prop("type");
             }
             
             return type; 
@@ -270,14 +261,14 @@
             $element = $( element ),
             type = element.type;
 
-            if ( type === 'radio' || type === 'checkbox' ) {
-                return $( 'input[name="' + element.name + '"]:checked' ).val();
+            if ( type === "radio" || type === "checkbox" ) {
+                return $( "input[name='" + element.name + "']:checked" ).val();
             } 
 
             val = $element.val();
 
-            if ( typeof val === 'string' ) {
-                return val.replace(/\r/g, '' );
+            if ( typeof val === "string" ) {
+                return val.replace(/\r/g, "" );
             }
 
             return val;
@@ -291,6 +282,26 @@
 
             number: function(value) {
                 return /^-?(?:\d+|\d{1,3}(?:,\d{3})+)?(?:\.\d+)?$/.test( value );
+            },
+
+            email: function(value) {
+                // From http://stackoverflow.com/questions/46155/validate-email-address-in-javascript
+                return /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test( value );
+            },
+
+            maxLength: function(value, element, parameter) {
+                element.data("rules").maxLength.message = "must be less than " + parameter + " characters long, currently " + value.length;
+                return value.length <= parameter;
+            },
+
+            minLength: function(value, element, parameter) {
+                element.data("rules").minLength.message = "must be more than " + parameter + " characters long, currently " + value.length;
+                return value.length >= parameter;
+            },
+
+            rangeLength: function(value, element, parameter) {
+                element.data("rules").rangeLength.message = "must be between " + parameter[ 0 ] + " and " + parameter[ 1 ] + " characters long, currently " + value.length;
+                return value.length >= parameter[ 0 ] && value.length <= parameter[ 1 ];
             }
         }
     };
@@ -299,8 +310,8 @@
     // preventing multiple instantiations.
     $.fn[validate] = function ( options ) {
         return this.each(function () {
-            if (!$.data(this, 'validate')) {
-                var validate = $.data(this, 'validate', new Validate( this, options));
+            if (!$.data(this, "validate")) {
+                var validate = $.data(this, "validate", new Validate( this, options));
             }
             validate.setuprules();
         });
