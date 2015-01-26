@@ -14,7 +14,6 @@
         onchangeElements: ['select', 'checkbox'],
         onkeyupElements: ['text', 'textarea'],
         errorList: [], //list of elements with validation failures.
-        errorMap: {},
         errorMessage: $("<span class='label alert-danger' id='errorMessage'></span>")
     };
 
@@ -68,7 +67,7 @@
             return this.methods[ruleType](value, element, parameter);
         },
 
-        //If an elements rule is valid == false then it should be added to the errorMap.
+        //If an elements rule is valid == false then it should be added to the errorList.
         updateErrorList: function(element) {
             var $this = this;
             var failure = false;
