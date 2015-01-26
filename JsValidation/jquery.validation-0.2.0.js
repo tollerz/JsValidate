@@ -275,29 +275,35 @@
 
         // Methods to check inputs value is correct.
         methods: {
+            // validate the input contains a value.
             required: function(value) {
                 return $.trim( value ).length > 0;
             },
 
+            // validate the input is a numeric character.
             number: function(value) {
                 return /^-?(?:\d+|\d{1,3}(?:,\d{3})+)?(?:\.\d+)?$/.test( value );
             },
 
+            // validate the input is a valid email address.
             email: function(value) {
                 // From http://stackoverflow.com/questions/46155/validate-email-address-in-javascript
                 return /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test( value );
             },
 
+            // validate the input does not exceed the max length.
             maxLength: function(value, element, parameter) {
                 element.data("rules").maxLength.message = "must be less than " + parameter + " characters long, currently " + value.length;
                 return value.length <= parameter;
             },
 
+            // validate the input value is not under the minimum length.
             minLength: function(value, element, parameter) {
                 element.data("rules").minLength.message = "must be more than " + parameter + " characters long, currently " + value.length;
                 return value.length >= parameter;
             },
 
+            // validate the input value is between a range of lengths.
             rangeLength: function(value, element, parameter) {
                 element.data("rules").rangeLength.message = "must be between " + parameter[ 0 ] + " and " + parameter[ 1 ] + " characters long, currently " + value.length;
                 return value.length >= parameter[ 0 ] && value.length <= parameter[ 1 ];
