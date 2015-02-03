@@ -63,33 +63,40 @@
 
         // validate a single rule for the given element.
         validateRule: function(ruleType, value, element) {
-            var parameter = this.options.rules[element.prop("id")][ruleType]
+            var parameter = this.options.rules[element.prop("id")][ruleType];
+
             return this.methods[ruleType](value, element, parameter);
         },
 
-        //If an elements rule is valid == false then it should be added to the errorList.
+        // Remove the element from the errorList, and re-add if it is still invalid.
         updateErrorList: function(element) {
             var $this = this;
             var failure = false;
+            var errorList = this.options.errorList;
+            var elementName = element.prop('id');
 
-            $.each(element.data("rules"), function(ruleType, details) {
-                if(!element.data("rules")[ruleType].valid) {
+            $this.removeError(elementName, errorList);
+
+            $.each(element.data('rules'), function(ruleType, details) {
+                if(!element.data('rules')[ruleType].valid) {
+                    $this.addError(elementName, errorList);
                     failure = true;
                 }
             });
-
-            var errorList = this.options.errorList;
-
-            if(failure) {
-                errorList.push(element.prop("id"));
-            }
-            else{
-                var index = errorList.indexOf(element.prop("id")); 
-                if(index > 0) {
-                    errorList.splice(index, 1);
-                }
-            }
         },
+
+        // Add an element to the errorList
+        addError: function(element, list) {
+            list.push(element);
+        },
+
+        // remove an element from the errorList
+        removeError: function(element, list) {
+            var index = list.indexOf(element);
+            if ( index > 0 ) {
+                list.splice(index, 1);
+            }
+        }
 
         // Display errors for all failed fields.
         // take into account select2 inputs.
