@@ -7,14 +7,15 @@
     defaults = {
         rules: {},
         validationError: "validationError",
-        debug: true,
+        debug: false,
         onchange: false,
         valid: false,
         onsubmit: true,
-        onchangeElements: ['select', 'checkbox'],
+        highlight: true,
+        onchangeElements: ['select', 'checkbox', 'file', 'textarea'],
         onkeyupElements: ['text', 'textarea'],
         errorList: [], //list of elements with validation failures.
-        errorMessage: $("<span class='label alert-danger' id='errorMessage'></span>")
+        errorMessage: $("<span class='label alert-danger' style='line-height:22px;  position:absolute;' id='errorMessage'></span>")
     };
 
     // create the validate class
@@ -63,8 +64,8 @@
 
         // validate a single rule for the given element.
         validateRule: function(ruleType, value, element) {
-            var parameter = this.options.rules[element.prop("id")][ruleType];
-
+            var parameter = this.options.rules[element.prop("id")][ruleType]
+            
             return this.methods[ruleType](value, element, parameter);
         },
 
@@ -117,9 +118,11 @@
 
                     if (!details.valid && !errorEnabled) {
                         var errorMessage = $this.options.errorMessage;
-
                         formatElement.parent().append((errorMessage).append(details.message));
-                        formatElement.css("border", "2px solid #b94a48");
+                        
+                        if ($this.options.highlight) {
+                            formatElement.css("border", "2px solid #b94a48");
+                        }
 
                         errorEnabled = true;
                     } 
@@ -191,19 +194,19 @@
         seteventhandler: function(input, inputType) {
             var $this = this;
             // set event types based on the element type.
-            if ($.inArray(inputType, this.options.onchangeElements) === 0) {
+            if ($.inArray(inputType, this.options.onchangeElements) !== -1) {
                 input.on(
                     "change", 
                     function() {
-                        $this.onchange(input)
+                        $this.onchange(input);
                     });
             }
 
-            if ($.inArray(inputType, this.options.onkeyupElements) === 0) {
+            if ($.inArray(inputType, this.options.onkeyupElements) !== -1) {
                 input.on(
                     "keyup blur", 
                     function() {
-                        $this.onkeyup(input)
+                        $this.onkeyup(input);
                     });
             }
 
@@ -211,7 +214,7 @@
                 input.on(
                     "submit",
                     function( event ) {
-                        $this.onsubmit(event, input)
+                        $this.onsubmit(event, input);
                     });
             }
         },
@@ -244,7 +247,7 @@
 
         // Check if the element is a valid input type for a form.
         validinputtype: function(element) {
-            return element.is("select, input, textarea");
+            return element.is("select, input, textarea, file, text");
         },
 
         // Return the input type as a string.
@@ -282,35 +285,29 @@
 
         // Methods to check inputs value is correct.
         methods: {
-            // validate the input contains a value.
             required: function(value) {
                 return $.trim( value ).length > 0;
             },
 
-            // validate the input is a numeric character.
             number: function(value) {
                 return /^-?(?:\d+|\d{1,3}(?:,\d{3})+)?(?:\.\d+)?$/.test( value );
             },
 
-            // validate the input is a valid email address.
             email: function(value) {
                 // From http://stackoverflow.com/questions/46155/validate-email-address-in-javascript
                 return /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test( value );
             },
 
-            // validate the input does not exceed the max length.
             maxLength: function(value, element, parameter) {
                 element.data("rules").maxLength.message = "must be less than " + parameter + " characters long, currently " + value.length;
                 return value.length <= parameter;
             },
 
-            // validate the input value is not under the minimum length.
             minLength: function(value, element, parameter) {
                 element.data("rules").minLength.message = "must be more than " + parameter + " characters long, currently " + value.length;
                 return value.length >= parameter;
             },
 
-            // validate the input value is between a range of lengths.
             rangeLength: function(value, element, parameter) {
                 element.data("rules").rangeLength.message = "must be between " + parameter[ 0 ] + " and " + parameter[ 1 ] + " characters long, currently " + value.length;
                 return value.length >= parameter[ 0 ] && value.length <= parameter[ 1 ];
