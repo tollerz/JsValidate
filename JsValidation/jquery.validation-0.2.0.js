@@ -97,7 +97,7 @@
             if ( index > 0 ) {
                 list.splice(index, 1);
             }
-        }
+        },
 
         // Display errors for all failed fields.
         // take into account select2 inputs.
