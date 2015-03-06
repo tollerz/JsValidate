@@ -15,7 +15,7 @@
         onchangeElements: ['select', 'checkbox', 'file', 'textarea'],
         onkeyupElements: ['text', 'textarea'],
         errorList: [], //list of elements with validation failures.
-        errorMessage: $("<span class='label alert-danger' style='line-height:22px;  position:absolute;' id='errorMessage'></span>")
+        errorMessage: $("<span class='validation-error' style='line-height:22px;  position:absolute;' id='errorMessage'></span>")
     };
 
     // create the validate class
@@ -135,7 +135,7 @@
         // the parent element is used to find the #errorMessage element for removal.
         reset: function(element) {
             element.parent().find("#errorMessage").remove();
-            this.options.errorMessage = $("<span class='label alert-danger' id='errorMessage'></span>");
+            this.options.errorMessage = $("<span class='validation-error' id='errorMessage'></span>");
             element.attr("style", "");
         },
 

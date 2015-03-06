@@ -1,0 +1,14 @@
+.validation-error {
+    font-size: 11.844px;
+    font-weight: bold;
+    line-height: 14px;
+    color: #b94a48;
+    vertical-align: baseline;
+    white-space: nowrap;
+    background-color: #f2dede;  
+    padding: 1px 4px 2px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    border-colour: #eed3d7;
+}
