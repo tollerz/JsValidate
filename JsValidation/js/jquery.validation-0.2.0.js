@@ -297,6 +297,10 @@
                 // From http://stackoverflow.com/questions/46155/validate-email-address-in-javascript
                 return /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test( value );
             },
+            
+            noSymbols: function(value) {
+                return /^[A-Za-z0-9 _]*[A-Za-z0-9][A-Za-z0-9 _]*$/.test(value);
+            },
 
             maxLength: function(value, element, parameter) {
                 element.data("rules").maxLength.message = "must be less than " + parameter + " characters long, currently " + value.length;
