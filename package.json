@@ -1,0 +1,19 @@
+{
+  "name": "JsValidation",
+  "version": "0.0.3",
+  "description": "jQuery form validation plugin",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tollerz/JsValidate.git"
+  },
+  "author": "Robert Toller",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tollerz/JsValidate/issues"
+  },
+  "homepage": "https://github.com/tollerz/JsValidate"
+}
