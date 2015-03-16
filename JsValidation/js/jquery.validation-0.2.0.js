@@ -390,12 +390,12 @@
             },
 
             maxLength: function(value, element, parameter) {
-                element.data('rules').maxLength.message = 'must be less than ' + parameter + ' characters long, currently ' + value.length;
+                element.data('rules').maxLength.message = 'must be no more than ' + parameter + ' characters long, currently ' + value.length;
                 return value.length <= parameter;
             },
 
             minLength: function(value, element, parameter) {
-                element.data('rules').minLength.message = 'must be more than ' + parameter + ' characters long, currently ' + value.length;
+                element.data('rules').minLength.message = 'must be no less than ' + parameter + ' characters long, currently ' + value.length;
                 return value.length >= parameter;
             },
 

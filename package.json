@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/tollerz/JsValidate/issues"
   },
-  "homepage": "https://github.com/tollerz/JsValidate"
+  "homepage": "https://github.com/tollerz/JsValidate",
+  "devDependencies": {
+    "gulp": "^3.8.11"
+  }
 }
