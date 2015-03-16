@@ -1,5 +1,5 @@
+// gives access to $ (jQuery), the window and document within the plugin.
 ;(function($, window, document, undefined) {
-    // Variables only created once.
 
     // Name of the plugin
     var validate = 'validate',  
@@ -15,7 +15,8 @@
         onchangeElements: ['select', 'checkbox', 'file', 'textarea'],
         onkeyupElements: ['text', 'textarea'],
         errorList: [], //list of elements with validation failures.
-        errorMessage: $("<span class='validation-error' style='line-height:22px;  position:absolute;' id='errorMessage'></span>")
+        passList: [],
+        errorMessage: $("<span class='validation-error' id='message'></span>")
     };
 
     // create the validate class
@@ -36,24 +37,20 @@
 
         // the init function will need to check the validity of all required elements.
         validation: function() {
-            var $this = this;
-            var form = this.$form;
             this.options.errorList = [];
 
-            //loop through all validation elements
-            $.each(this.options.rules, function(element, value) {
-                var element = $(form.find('#' + element));
-                
-                $this.checkValidity(element);
-                $this.updateErrorList(element, 'rules');
-            });
+            this.checkAll(this.options.rules, 'rules');
+            this.checkAll(this.options.verification, 'verification');
+        },
 
-            //loop through all verification elements
-            $.each(this.options.verification, function(element, value) {
+        // Loop through the list of checks (validation and verification) and run the required check.
+        checkAll: function(checks, checkType) {
+            var form = this.$form;
+            var $this = this;
+
+            $.each(checks, function(element, value) {
                 var element = $(form.find('#' + element));
-                
                 $this.checkValidity(element);
-                $this.updateErrorList(element, 'verification');
             });
         },
 
@@ -64,7 +61,7 @@
 
             // run validation checks
             $.each(element.data("rules"), function(ruleType, details) {
-                element.data("rules")[ruleType].valid = $this.check(ruleType, value, element);
+                element.data("rules")[ruleType].valid = $this.validateCheck(ruleType, value, element);
             });
 
             // run verification checks
@@ -79,7 +76,7 @@
         },
 
         // validate a single rule for the given element.
-        check: function(ruleType, value, element) {
+        validateCheck: function(ruleType, value, element) {
             var parameter = this.options.rules[element.prop('id')][ruleType];
             return this.validate[ruleType](value, element, parameter);
         },
@@ -87,6 +84,7 @@
         // The validator (this) is passed so that the errorslist can be updated
         // by a completed ajax request.
         verifyCheck: function(value, element, validator) {
+
             var url = element.data('verification').ajax.url + value;
 
             if (value === '') {
@@ -100,7 +98,6 @@
         // Remove the element from the errorList, and re-add if it is still invalid.
         updateErrorList: function(element, checkType) {
             var $this = this;
-            var failure = false;
             var errorList = this.options.errorList;
             var elementName = element.prop('id');
 
@@ -109,19 +106,21 @@
             $.each(element.data(checkType), function(ruleType, details) {
                 if(!element.data(checkType)[ruleType].valid) {
                     $this.addError(elementName, errorList);
-                    failure = true;
                 }
             });
         },
 
-        // Add an element to the errorList
+        // Add an element to the errorList.
         addError: function(element, list) {
-            list.push(element);
+            if(list.indexOf(element) === -1) {
+                list.push(element);
+            }
         },
 
-        // remove an element from the errorList
+        // Remove an element from the errorList
         removeError: function(element, list) {
             var index = list.indexOf(element);
+           
             if ( index > 0 ) {
                 list.splice(index, 1);
             }
@@ -141,10 +140,10 @@
 
             $this.reset(formatElement);
             
-            if ($.inArray(selector, this.options.errorList) >= 0) {
-                $.each(element.data(checkType), function(ruleType, details) {
+            if ( $.inArray(selector, this.options.errorList ) >= 0) {
+                $.each( element.data( checkType ), function( ruleType, details ) {
 
-                    if (!details.valid && !errorEnabled) {
+                    if ( !details.valid && !errorEnabled) {
                         var errorMessage = $this.options.errorMessage;
                         formatElement.parent().append((errorMessage).append(details.message));
                         
@@ -162,8 +161,8 @@
         // since the error element is currently displayed at the same level as the input
         // the parent element is used to find the #errorMessage element for removal.
         reset: function(element) {
-            element.parent().find('#errorMessage').remove();
-            this.options.errorMessage = $('<span class="validation-error" id="errorMessage"></span>');
+            element.parent().find('#message').remove();
+            this.options.errorMessage = $('<span class="validation-error" id="message"></span>');
             element.attr('style', '');
         },
 
@@ -246,9 +245,10 @@
             
             $.each(rules, function(rule, value) {
                 verficationRules[rule] = {
-                            'message': value[0],
-                            'url'    : value[1],
-                            'valid'  : false
+                            'message'    : value[0],
+                            'url'        : value[1],
+                            'valid'      : false,
+                            'inprogress' : false
                          }
             });
 
@@ -417,14 +417,15 @@
                         this.ajaxRequest.abort();
                     } 
                     clearTimeout(this.requestTimer);
+
+                    element.data('verification').ajax.inprogress = true;
+
                     this.requestTimer = setTimeout(this.request(url), 350);
-
                     this.response(element, validator);
-
                 },
 
                 // Initiate an ajax request.
-                request: function(url) {
+                request: function(url) {                 
                     this.ajaxRequest = $.ajax({
                         type:'GET',
                         url: url
@@ -440,6 +441,8 @@
 
                         validator.updateErrorList(element, 'verification');
                         validator.displayErrors(element, 'verification');
+
+                        element.data('verification').ajax.inprogress = false;
                     });
                 }
             }
