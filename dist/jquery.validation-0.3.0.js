@@ -194,7 +194,7 @@
                     return;
                 }
                 // store rules against the input element.
-                input.data('rules', $this.setValidationRules(rules));
+                input.data('rules', $this.setrules(rules));
                 $this.seteventhandler(input, inputType);
             });
 
@@ -211,7 +211,7 @@
                     return;
                 }
                 // store rules against the input element.
-                input.data('verification', $this.setVerificationRules(verification));
+                input.data('verification', $this.setVerification(verification));
                 
                 $this.seteventhandler(input, inputType);
             });
@@ -224,7 +224,7 @@
         },
 
         // Build the rules for an element setting validity at false.
-        setValidationRules: function(rules) {
+        setrules: function(rules) {
             var $this = this;
             var validationRules = {};
             
@@ -239,7 +239,7 @@
         },
 
         // Build the verification rules for an element.
-        setVerificationRules: function(rules) {
+        setVerification: function(rules) {
             var $this = this;
             var verficationRules = {};
             
@@ -390,12 +390,12 @@
             },
 
             maxLength: function(value, element, parameter) {
-                element.data('rules').maxLength.message = 'must be less than ' + parameter + ' characters long, currently ' + value.length;
+                element.data('rules').maxLength.message = 'must be no more than ' + parameter + ' characters long, currently ' + value.length;
                 return value.length <= parameter;
             },
 
             minLength: function(value, element, parameter) {
-                element.data('rules').minLength.message = 'must be more than ' + parameter + ' characters long, currently ' + value.length;
+                element.data('rules').minLength.message = 'must be no less than ' + parameter + ' characters long, currently ' + value.length;
                 return value.length >= parameter;
             },
 

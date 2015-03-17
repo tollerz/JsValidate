@@ -1,6 +1,6 @@
 {
-  "name": "JsValidation",
-  "version": "0.0.3",
+  "name": "jquery.validation",
+  "version": "0.3.0",
   "description": "jQuery form validation plugin",
   "main": "index.js",
   "scripts": {
@@ -17,6 +17,9 @@
   },
   "homepage": "https://github.com/tollerz/JsValidate",
   "devDependencies": {
-    "gulp": "^3.8.11"
+    "gulp": "^3.8.11",
+    "gulp-concat": "^2.5.2",
+    "gulp-minify": "0.0.5",
+    "gulp-rename": "^1.2.0"
   }
 }
