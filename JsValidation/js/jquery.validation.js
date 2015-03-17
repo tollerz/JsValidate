@@ -85,20 +85,19 @@
             // run validation checks
             if (validationChecks !== undefined) {
                 $.each(validationChecks, function(checkType, details) {
-                    console.log('validating ' + value + ' = ' + $this.validateCheck(checkType, value, element));
                     validationChecks[checkType].valid = $this.validateCheck(checkType, value, element);
                 });
             }
 
-            // run verification checks
+            // Verification checks set the 'valid' value themselves due to waiting for Ajax response.
             if (verificationChecks !== undefined) {
                 $.each(verificationChecks, function() {
                     $this.verifyCheck(value, element, $this);
                 });
             }
 
-            $this.updateErrorList(element, validationChecks);
-            $this.displayErrors(element, validationChecks);
+            $this.updateErrorList(element, 'rules');
+            $this.displayErrors(element, 'rules');
         },
 
         // validate a single rule for the given element.
@@ -315,7 +314,7 @@
 
                 if ($.inArray(inputType, this.options.onkeyupElements) !== -1) {
                     input.on(
-                        'keyup blur', 
+                        'keyup', 
                         function() {
                             $this.onkeyup(input);
                         });
