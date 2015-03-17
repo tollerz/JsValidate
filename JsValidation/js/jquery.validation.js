@@ -22,13 +22,13 @@
         onkeyupElements: ['text', 'textarea'],
         errorList: [], //list of elements with validation failures.
         passList: [],
-        errorMessage: $("<span class='validation-error' id='message'></span>")
+        errorMessage: $('<span class="validation-error" id="message"></span>')
     };
 
     /**
      * Create the validate class
-     * @param {String} form    The ID of the form to be validated.
-     * @param {Object} options The options provided by the user for the forms validation.
+     * @param {String} form    [The ID of the form to be validated.]
+     * @param {Object} options [The options provided by the user for the forms validation.]
      */
     function Validate( form, options) {
         this.$form = $(form);
@@ -60,7 +60,7 @@
 
         /**
          * Loop through the list of rules and run the required check.
-         * @param  {Object} checks    The list of rules that should be run.
+         * @param  {Object} checks    [The list of rules that should be run.]
          */
         checkAll: function(checks) {
             var form = this.$form;
@@ -68,15 +68,15 @@
 
             $.each(checks, function(element, value) {
                 var element = $(form.find('#' + element));
-                $this.checkValidity(element);
+                $this.checkElement(element);
             });
         },
 
         /**
-         * Run all the checks specified for the given element.
-         * @param  {jQuery} element The element selected by jQuery.
+         * Run all the checks specified in the 'data' of the given element.
+         * @param  {jQuery} element [The element selected by jQuery.]
          */
-        checkValidity: function(element) {
+        checkElement: function(element) {
             var $this = this;
             var value = $this.elementValue(element);
             var validationChecks = element.data('rules');
@@ -84,8 +84,8 @@
 
             // run validation checks
             if (validationChecks !== undefined) {
-                $.each(validationChecks, function(checkType, details) {
-                    validationChecks[checkType].valid = $this.validateCheck(checkType, value, element);
+                $.each(validationChecks, function(check, details) {
+                    validationChecks[check].valid = $this.validateCheck(check, value, element);
                 });
             }
 
@@ -100,49 +100,81 @@
             $this.displayErrors(element, 'rules');
         },
 
-        // validate a single rule for the given element.
-        validateCheck: function(ruleType, value, element) {
-            var parameter = this.options.rules[element.prop('id')][ruleType];
-            return this.validate[ruleType](value, element, parameter);
+        /**
+         * validate a single rule for the given element.
+         * 
+         * @param  {String} check    [The validation check to run.]
+         * @param  {String} value    [The value of input to validate against]
+         * @param  {jQuery} element  [The form field being validated]
+         * @return {Boolean}         [True if the value passes the validation check]
+         */
+        validateCheck: function(check, value, element) {
+            var parameter = this.options.rules[element.prop('id')][check];
+            return this.validate[check](value, element, parameter);
         },
 
         // The validator (this) is passed so that the errorslist can be updated
         // by a completed ajax request.
+        /**
+         * Run all specified verification checks against an element.
+         * 
+         * @param  {String} value     [The value of input to verfy]
+         * @param  {jQuery} element   [The form field being verified]
+         * @param  {Object} validator ['this', passed so that the errorlist can be updated by the completed Ajax]
+         * @return {Boolean}          [Return false if the value of the form field is not verifiable]
+         */
         verifyCheck: function(value, element, validator) {
 
             var url = element.data('verification').ajax.url + value;
 
-            if (value === '') {
+            if (value === '' || value ===  null) {
                 return false;
             }
             else {
-                return this.verify.ajax.initiate(element, url, validator);
+                this.verify.ajax.initiate(element, url, validator);
             }
         },
 
-        // Remove the element from the errorList, and re-add if it is still invalid.
+        /**
+         * Update the error list with the id's of all elements currently failing 
+         * either validation or verification.
+         * 
+         * @param  {jQuery} element   [The form field to check is valid.]
+         * @param  {String} checkType [The type of check to lookup the validity for]
+         */
         updateErrorList: function(element, checkType) {
             var $this = this;
             var errorList = this.options.errorList;
             var elementName = element.prop('id');
 
-            $this.removeError(elementName, errorList);
-
             $.each(element.data(checkType), function(ruleType, details) {
                 if(!element.data(checkType)[ruleType].valid) {
                     $this.addError(elementName, errorList);
                 }
+                else {
+                    $this.removeError(elementName, errorList);
+                }
             });
         },
 
-        // Add an element to the errorList.
+        /**
+         * Add a form fields id to the list of elements failing validation.
+         * 
+         * @param {String} element [The id of the for field]
+         * @param {Array}  list    [The list of errors to update]
+         */
         addError: function(element, list) {
             if(list.indexOf(element) === -1) {
                 list.push(element);
             }
         },
 
-        // Remove an element from the errorList
+        /**
+         * Remove a form fields id from the list of elements failing validation.
+         * 
+         * @param  {String} element [The id of the form field]
+         * @param  {Array}  list    [The list of errors to update]
+         */
         removeError: function(element, list) {
             var index = list.indexOf(element);
            
@@ -151,8 +183,14 @@
             }
         },
 
-        // Display errors for all failed fields.
-        // take into account select2 inputs.
+        /**
+         * Display the errors for all failed fields.
+         *     (This has to take into account select2 form fields as styling will 
+         *      will need to be appended to a different element than normal.)
+         *
+         * @param  {jQuery} element   [The form field to display the error for]
+         * @param  {String} checkType [The type of check]
+         */
         displayErrors: function(element, checkType) {
             var $this = this;
             var selector = element.prop('id');
@@ -182,65 +220,40 @@
             }
         },
 
-        // Reset the error details against a given element.
-        // since the error element is currently displayed at the same level as the input
-        // the parent element is used to find the #errorMessage element for removal.
+        /**
+         * Reset the error details against a given element.
+         * Since the error element is currently displayed at the same level as the input
+         * the parent element is used to find the  #errorMessage element for removal.
+         *
+         * By introducing a popover/tooltip error notification it may be possible to get around this.
+         * 
+         * @param  {jQuery} element [The form field to reset the error message for.]
+         */
         reset: function(element) {
             element.parent().find('#message').remove();
             this.options.errorMessage = $('<span class="validation-error" id="message"></span>');
             element.attr('style', '');
         },
 
-        // If any error remain form is still invalid.
+        /**
+         * If any error remains in the errorlist then the form is still invalid.
+         * 
+         * @return {Boolean} [True if no errors]
+         */
         formValid: function() {
             return this.options.errorList.length === 0;
         },
 
         /**
-         * Set the rule for all valid inputs.
-         *
-         * rule object
-         * @example
-         *      {required: "this field is required", number: "must be a number"}
-         * @return {Boolean} returns false if there is an invalid input type.
+         * Prepare the form for validation by setting the required checks on the form fields 'data'
+         * property and applying the required event handlers.
          */
-        setuprules: function() {
+        prepareForm: function() {
             var $this = this;
-            // will need to check the elements that are in the options and bind change events to them.
-            $.each(this.options.rules, function(id, rules){
+            var form = $this.$form;
 
-                var form = $this.$form;
-                var input = $(form.find('#' + id));
-                var inputType = $this.inputtype(input);
-
-                if (!$this.validinputtype(input)){
-                    console.error('Element with id "' + id + '" is a <' + inputType + '> and not a valid form element.');
-                    $this.removeRule(input.prop('id'));
-                    return;
-                }
-                // store rules against the input element.
-                input.data('rules', $this.setValidationRules(rules));
-                $this.seteventhandler(input, inputType);
-            });
-
-            // do the same again for the verify rules (this duplicated code will need to be removed)
-            $.each(this.options.verification, function(id, verification){
-
-                var form = $this.$form;
-                var input = $(form.find('#' + id));
-                var inputType = $this.inputtype(input);
-
-                if (!$this.validinputtype(input)){
-                    console.error('Element with id "' + id + '" is a <' + inputType + '> and not a valid form element.');
-                    $this.removeRule(input.prop('id'));
-                    return;
-                }
-                // store rules against the input element.
-                input.data('verification', $this.setVerificationRules(verification));
-                
-                $this.seteventhandler(input, inputType);
-            });
-
+            this.applyRules(this.options.rules, 'rules', this.setValidationRules);
+            this.applyRules(this.options.verification, 'verification', this.setVerificationRules);
 
             // Setup event handler for on submit
             if (this.options.onsubmit === true) {
@@ -248,28 +261,63 @@
             }
         },
 
-        // Build the rules for an element setting validity at false.
-        setValidationRules: function(rules) {
+        /**
+         * Set the options provided by the user to the 'data' property of each specified form field
+         * The event handlers are set for each element at this time.
+         * 
+         * @param  {Object}   options   [The checks specified by the user]
+         * @param  {String}   checkType [The type of checks (Validation or Verification)]
+         * @param  {Function} buildCheckDetails  [The function to build check details to set against the form field]
+         */
+        applyRules: function(options, checkType, buildCheckDetails) {
             var $this = this;
-            var validationRules = {};
-            
-            $.each(rules, function(rule, value) {
-                validationRules[rule] = {
+            var form = $this.$form;
+
+            $.each(options, function(id, check){
+                var input = $(form.find('#' + id));
+                var inputType = $this.inputtype(input);
+
+                if (!$this.validinputtype(input)){
+                    console.error('Element with id "' + id + '" is a <' + inputType + '> and not a valid form element.');
+                    $this.removeRule(id);
+                    return;
+                }
+
+                input.data(checkType, buildCheckDetails(check));
+                $this.seteventhandler(input, inputType);
+            });
+        },
+
+        /**
+         * From the checks provided build an object to keep track of the status of each validation check.
+         * 
+         * @param {Object} checks [The checks]
+         */
+        setValidationRules: function(checks) {
+            var $this = this;
+            var validationChecks = {};
+
+            $.each(checks, function(check, value) {
+                validationChecks[check] = {
                             'message': value,
                             'valid'  : false
                          }
             });
 
-            return validationRules;
+            return validationChecks;
         },
 
-        // Build the verification rules for an element.
-        setVerificationRules: function(rules) {
+        /**
+         * From the checks provided build an object to keep track of the status of each verification check.
+         * 
+         * @param {Object} checks [The checks]
+         */
+        setVerificationRules: function(checks) {
             var $this = this;
-            var verficationRules = {};
+            var verficationChecks = {};
             
-            $.each(rules, function(rule, value) {
-                verficationRules[rule] = {
+            $.each(checks, function(check, value) {
+                verficationChecks[check] = {
                             'message'    : value[0],
                             'url'        : value[1],
                             'valid'      : false,
@@ -277,32 +325,29 @@
                          }
             });
 
-            return verficationRules;
+            return verficationChecks;
         },
 
         /**
-         * Check if the user has specified a custom function.
+         * Delete the rules for a given input.
+         *     (usually this will be to ignore invalid element assignments when the 
+         *      plugin is instantiated.)
+         *  
+         * @param {String} input [The input to remove the rules for]
          */
-        defineCustomFunction: function(value) {
-            if (typeof value === 'function'){
-                return value;
-            }
-            else {
-                return function() {return false;}
-            }
-        },
-
-        // Delete the rules for a given input (usually this will be to ignore invalid element assignments 
-        // when the plugin is instatntiated)
         removeRule: function(input) {
             delete this.options.rules[input];
         },
 
-        // Based on the input type set the event handlers.
+        /**
+         * Based on the form field input type set the event handlers for the field.
+         * 
+         * @param  {jQuery} input     [The form field to set the event handler too.]
+         * @param  {String} inputType [the type of form field input e.g. 'text', 'textarea', 'select' etc...]
+         */
         seteventhandler: function(input, inputType) {
             var $this = this;
             
-            // if onchange === true set change event handlers
             if (this.options.onchange) {
                 if ($.inArray(inputType, this.options.onchangeElements) !== -1) {
                     input.on(
@@ -335,8 +380,8 @@
          * Manage on submit event
          * This will need to ensure that Ajax scripts have finished before submitting.
          * 
-         * @param  {Event} event   The submit event
-         * @return {Boolean}       Return false if the form is not ready to be submitted.
+         * @param  {Event} event   [The submit event]
+         * @return {Boolean}       [Return false if the form is not ready to be submitted.]
          */
         onsubmit:function(event) {
             //If debug mode set then never submit the form.
@@ -356,22 +401,38 @@
             }
         },
 
-        // The onkeyup event
+        /**
+         * The onkeyup event
+         * @param {jQuery} element [The element]
+         */
         onkeyup: function(element) {
-            this.checkValidity(element);
+            this.checkElement(element);
         },
 
-        // The onchange event
+        /**
+         * The onchange event
+         * @param {jQuery} element [The element]
+         */
         onchange: function(element) {
-            this.checkValidity(element);
+            this.checkElement(element);
         },
 
-        // Check if the element is a valid input type for a form.
+        /**
+         * Check if the element is a valid input type for a form.
+         * 
+         * @param  {String} element [The element type]
+         * @return {Boolean}        [True if the element is a valid type]
+         */
         validinputtype: function(element) {
             return element.is('select, input, textarea, file, text');
         },
 
-        // Return the input type as a string.
+        /**
+         * Return the input type as a string.
+         * 
+         * @param  {String} element [The element id to use as a selector]
+         * @return {String}         [The 'tagName' of the element or the 'type' if an input field]
+         */
         inputtype: function(element) {
             var type = '';
 
@@ -385,7 +446,12 @@
             return type; 
         },
 
-        // Return the value of the given form element.
+        /**
+         * Return the value of the given form element.
+         * 
+         * @param  {String} element [The element id to use as a selector]
+         * @return {String}         [The value of the form field]
+         */
         elementValue: function(element) {
             var val,
             $element = $( element ),
@@ -404,7 +470,10 @@
             return val;
         },
 
-        // Methods to check inputs value is correct.
+        /**
+         * Validation methods
+         * @type {Object}
+         */
         validate: {
             required: function(value) {
                 return $.trim( value ).length > 0;
@@ -439,6 +508,10 @@
             }
         },
 
+        /**
+         * Verification methods.
+         * @type {Object}
+         */
         verify: {
             ajax: {
                 ajaxRequest: null,
@@ -483,14 +556,19 @@
         }
     };
 
-    // A really lightweight plugin wrapper around the constructor, 
-    // preventing multiple instantiations.
+    /**
+     * A lightweight plugin wrapper around the constructor, 
+     * preventing multiple instantiations.
+     * 
+     * @param  {Object} options [the validation/Verification checks specified by the user]
+     * @return {this}         [returns an instance of the element the validator is called on]
+     */
     $.fn[validate] = function( options ) {
         return this.each( function() {
             if ( !$.data( this, 'validate' )) {
                 var validate = $.data( this, 'validate', new Validate( this, options ));
             }
-            validate.setuprules();
+            validate.prepareForm();
         });
     };
 
