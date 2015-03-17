@@ -1,9 +1,15 @@
 // gives access to $ (jQuery), the window and document within the plugin.
 ;(function($, window, document, undefined) {
 
-    // Name of the plugin
+    /**
+     * The name of the plugin
+     * @type {String}
+     */
     var validate = 'validate',  
 
+    /**
+     * Default options set via the plugin. 
+     */
     defaults = {
         rules: {},
         verification: {},
@@ -19,32 +25,44 @@
         errorMessage: $("<span class='validation-error' id='message'></span>")
     };
 
-    // create the validate class
+    /**
+     * Create the validate class
+     * @param {String} form    The ID of the form to be validated.
+     * @param {Object} options The options provided by the user for the forms validation.
+     */
     function Validate( form, options) {
         this.$form = $(form);
         
         this.options = $.extend( {}, defaults, options);
 
         this._defaults = defaults;
+
         this._name = validate;
 
         return this;
     }
 
-    // Prototype the validate class
-    // This contains all the methods that can be called by all instances of the class.
+    /**
+     * Prototype the validate class
+     * This contains all the methods that can be called by all instances of the class.
+     */
     Validate.prototype = {
 
-        // the init function will need to check the validity of all required elements.
+        /**
+         * The init function runs all validate and verify rules.
+         */
         validation: function() {
             this.options.errorList = [];
 
-            this.checkAll(this.options.rules, 'rules');
-            this.checkAll(this.options.verification, 'verification');
+            this.checkAll(this.options.rules);
+            this.checkAll(this.options.verification);
         },
 
-        // Loop through the list of checks (validation and verification) and run the required check.
-        checkAll: function(checks, checkType) {
+        /**
+         * Loop through the list of rules and run the required check.
+         * @param  {Object} checks    The list of rules that should be run.
+         */
+        checkAll: function(checks) {
             var form = this.$form;
             var $this = this;
 
@@ -54,25 +72,33 @@
             });
         },
 
-        // Validate a single element
+        /**
+         * Run all the checks specified for the given element.
+         * @param  {jQuery} element The element selected by jQuery.
+         */
         checkValidity: function(element) {
             var $this = this;
             var value = $this.elementValue(element);
+            var validationChecks = element.data('rules');
+            var verificationChecks = element.data('verification');
 
             // run validation checks
-            $.each(element.data("rules"), function(ruleType, details) {
-                element.data("rules")[ruleType].valid = $this.validateCheck(ruleType, value, element);
-            });
+            if (validationChecks !== undefined) {
+                $.each(validationChecks, function(checkType, details) {
+                    console.log('validating ' + value + ' = ' + $this.validateCheck(checkType, value, element));
+                    validationChecks[checkType].valid = $this.validateCheck(checkType, value, element);
+                });
+            }
 
             // run verification checks
-            if(element.data("verification") !== undefined) {
-                $.each(element.data("verification"), function(ruleType) {
+            if (verificationChecks !== undefined) {
+                $.each(verificationChecks, function() {
                     $this.verifyCheck(value, element, $this);
                 });
             }
 
-            $this.updateErrorList(element, 'rules');
-            $this.displayErrors(element, 'rules');
+            $this.updateErrorList(element, validationChecks);
+            $this.displayErrors(element, validationChecks);
         },
 
         // validate a single rule for the given element.
@@ -300,22 +326,31 @@
                 input.on(
                     'submit',
                     function( event ) {
-                        $this.onsubmit(event, input);
+                        $this.onsubmit(event);
                     });
             }
 
         },
 
-        // The onsubmit event
-        onsubmit:function(event, element) {
+        /**
+         * Manage on submit event
+         * This will need to ensure that Ajax scripts have finished before submitting.
+         * 
+         * @param  {Event} event   The submit event
+         * @return {Boolean}       Return false if the form is not ready to be submitted.
+         */
+        onsubmit:function(event) {
             //If debug mode set then never submit the form.
             if (this.options.debug) {
                 event.preventDefault();
+                return false;
             } 
 
             this.validation();
-            // If the form is not valid do not submit.
 
+            // if Ajax requests not complete do not submit.
+            // (code to check Ajax need to goes here)
+    
             if(!this.formValid()){
                 event.preventDefault();
                 return false;
@@ -451,10 +486,10 @@
 
     // A really lightweight plugin wrapper around the constructor, 
     // preventing multiple instantiations.
-    $.fn[validate] = function ( options ) {
-        return this.each(function () {
-            if (!$.data(this, 'validate')) {
-                var validate = $.data(this, 'validate', new Validate( this, options));
+    $.fn[validate] = function( options ) {
+        return this.each( function() {
+            if ( !$.data( this, 'validate' )) {
+                var validate = $.data( this, 'validate', new Validate( this, options ));
             }
             validate.setuprules();
         });
