@@ -21,8 +21,7 @@
         onchangeElements: ['select', 'checkbox', 'file', 'textarea'],
         onkeyupElements: ['text', 'textarea'],
         errorList: [], //list of elements with validation failures.
-        passList: [],
-        errorMessage: $('<span class="validation-error" id="message"></span>')
+        passList: []
     };
 
     /**
@@ -82,7 +81,7 @@
             var validationChecks = element.data('rules');
             var verificationChecks = element.data('verification');
 
-            // run validation checks
+            // Run validation checks.
             if (validationChecks !== undefined) {
                 $.each(validationChecks, function(check, details) {
                     validationChecks[check].valid = $this.validateCheck(check, value, element);
@@ -181,6 +180,16 @@
         },
 
         /**
+         * Create an error message element.
+         * @param {String} message [The text to display in the error container]
+         * @return {String}        [The error container]
+         */
+        createError: function(message) {
+            var errorContainer = $('<span class="validation-error" id="message"></span>');
+            return errorContainer.append(message);
+        },
+
+        /**
          * Display the errors for all failed fields.
          *     (This has to take into account select2 form fields as styling will 
          *      will need to be appended to a different element than normal.)
@@ -202,11 +211,9 @@
             
             if ($.inArray(selector, this.options.errorList) >= 0) {
                 $.each( element.data(checkType), function(ruleType, details) {
-
+                    
                     if (!details.valid && !errorEnabled) {
-                        var errorMessage = $this.options.errorMessage;
-
-                        formatElement.parent().append((errorMessage).append(details.message));
+                        formatElement.parent().append($this.createError(details.message));
                         
                         if ($this.options.highlight) {
                             formatElement.css('border', '2px solid #b94a48');
@@ -230,7 +237,6 @@
         reset: function(element) {
             element.parent().find('#message').remove();
             element.attr('style', '');
-            this.options.errorMessage.html();
         },
 
         /**
