@@ -113,8 +113,6 @@
             return this.validate[check](value, element, parameter);
         },
 
-        // The validator (this) is passed so that the errorslist can be updated
-        // by a completed ajax request.
         /**
          * Run all specified verification checks against an element.
          * 
@@ -124,7 +122,6 @@
          * @return {Boolean}          [Return false if the value of the form field is not verifiable]
          */
         verifyCheck: function(value, element, validator) {
-
             var url = element.data('verification').ajax.url + value;
 
             if (value === '' || value ===  null) {
@@ -203,11 +200,12 @@
 
             $this.reset(formatElement);
             
-            if ( $.inArray(selector, this.options.errorList ) >= 0) {
-                $.each( element.data( checkType ), function( ruleType, details ) {
+            if ($.inArray(selector, this.options.errorList) >= 0) {
+                $.each( element.data(checkType), function(ruleType, details) {
 
-                    if ( !details.valid && !errorEnabled) {
+                    if (!details.valid && !errorEnabled) {
                         var errorMessage = $this.options.errorMessage;
+
                         formatElement.parent().append((errorMessage).append(details.message));
                         
                         if ($this.options.highlight) {
@@ -231,8 +229,8 @@
          */
         reset: function(element) {
             element.parent().find('#message').remove();
-            this.options.errorMessage = $('<span class="validation-error" id="message"></span>');
             element.attr('style', '');
+            this.options.errorMessage.html();
         },
 
         /**
@@ -262,7 +260,7 @@
         },
 
         /**
-         * Set the options provided by the user to the 'data' property of each specified form field
+         * Set the options provided by the user to the 'data' property of each specified form field.
          * The event handlers are set for each element at this time.
          * 
          * @param  {Object}   options   [The checks specified by the user]
@@ -350,7 +348,7 @@
             
             if (this.options.onchange) {
                 if ($.inArray(inputType, this.options.onchangeElements) !== -1) {
-                    input.on(
+                    input.off('change').on(
                         'change', 
                         function() {
                             $this.onchange(input);
@@ -358,7 +356,7 @@
                 }
 
                 if ($.inArray(inputType, this.options.onkeyupElements) !== -1) {
-                    input.on(
+                    input.off('keyup').on(
                         'keyup', 
                         function() {
                             $this.onkeyup(input);
@@ -556,6 +554,8 @@
         }
     };
 
+    // A really lightweight plugin wrapper around the constructor, 
+    // preventing multiple instantiations.
     /**
      * A lightweight plugin wrapper around the constructor, 
      * preventing multiple instantiations.
