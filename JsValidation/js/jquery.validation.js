@@ -20,8 +20,8 @@
         highlight: true,
         onchangeElements: ['select', 'checkbox', 'file', 'textarea'],
         onkeyupElements: ['text', 'textarea'],
-        errorList: [], //list of elements with validation failures.
-        passList: []
+        passList: [],
+        errorsMap: {} // A map to store multiple errorLists based on the type of check being ran.
     };
 
     /**
@@ -51,7 +51,8 @@
          * The init function runs all validate and verify rules.
          */
         validation: function() {
-            this.options.errorList = [];
+            this.options.errorsMap['rules'] = [];
+            this.options.errorsMap['verification'] = [];
 
             this.checkAll(this.options.rules);
             this.checkAll(this.options.verification);
@@ -140,7 +141,7 @@
          */
         updateErrorList: function(element, checkType) {
             var $this = this;
-            var errorList = this.options.errorList;
+            var errorList = this.options.errorsMap[checkType];
             var elementName = element.prop('id');
 
             $.each(element.data(checkType), function(ruleType, details) {
@@ -148,34 +149,55 @@
                     $this.addError(elementName, errorList);
                 }
                 else {
-                    $this.removeError(elementName, errorList);
+                    $this.removeError(element, errorList, checkType);                
                 }
             });
         },
 
         /**
+         * Check if an element is in the error list.
+         * 
+         * @param  {jQuery} element [The form field to check]
+         * @return {Boolean}        [True if there is currently and error for the form field]
+         */
+        hasError: function(element, list) {
+            return $.inArray(element.prop('id'), list) >= 0
+        },
+
+        /**
          * Add a form fields id to the list of elements failing validation.
          * 
-         * @param {String} element [The id of the for field]
+         * @param {String} elementName [The id of the for field]
          * @param {Array}  list    [The list of errors to update]
          */
-        addError: function(element, list) {
-            if(list.indexOf(element) === -1) {
-                list.push(element);
+        addError: function(elementName, list) {
+            if(list.indexOf(elementName) === -1) {
+                list.push(elementName);
             }
         },
 
         /**
          * Remove a form fields id from the list of elements failing validation.
          * 
-         * @param  {String} element [The id of the form field]
-         * @param  {Array}  list    [The list of errors to update]
+         * @param  {String} elementName [The id of the form field]
+         * @param  {Array}  list        [The list of errors to update]
+         * @param  {String} checkType   [The type of check]
          */
-        removeError: function(element, list) {
-            var index = list.indexOf(element);
-           
-            if ( index > 0 ) {
-                list.splice(index, 1);
+        removeError: function(element, list, checkType) {
+            var invalidElement = false;
+
+            $.each(element.data(checkType), function(check, details) {
+                if (!details.valid) {
+                    invalidElement = true;
+                }
+            });
+
+            if (!invalidElement) {
+                var index = list.indexOf(element.prop('id'));
+                
+                if ( index >= 0 ) {
+                    list.splice(index, 1);
+                }
             }
         },
 
@@ -184,9 +206,23 @@
          * @param {String} message [The text to display in the error container]
          * @return {String}        [The error container]
          */
-        createError: function(message) {
+        createErrorMessage: function(message) {
             var errorContainer = $('<span class="validation-error" id="message"></span>');
             return errorContainer.append(message);
+        },
+
+        /**
+         * Reset the error details against a given element.
+         * Since the error element is currently displayed at the same level as the input
+         * the parent element is used to find the  #errorMessage element for removal.
+         *
+         * By introducing a popover/tooltip error notification it may be possible to get around this.
+         * 
+         * @param  {jQuery} element [The form field to reset the error message for.]
+         */
+        removeErrorMessage: function(element) {
+            element.parent().find('#message').remove();
+            element.attr('style', '');
         },
 
         /**
@@ -207,14 +243,14 @@
                 formatElement = $(element.prev('div'));
             }
 
-            $this.reset(formatElement);
+            $this.removeErrorMessage(formatElement);
             
-            if ($.inArray(selector, this.options.errorList) >= 0) {
-                $.each( element.data(checkType), function(ruleType, details) {
+            if ($this.hasError(element, $this.options.errorsMap[checkType])) {
+                
+                $.each(element.data(checkType), function(ruleType, details) {
                     
                     if (!details.valid && !errorEnabled) {
-                        formatElement.parent().append($this.createError(details.message));
-                        
+                        formatElement.parent().append($this.createErrorMessage(details.message));
                         if ($this.options.highlight) {
                             formatElement.css('border', '2px solid #b94a48');
                         }
@@ -226,26 +262,20 @@
         },
 
         /**
-         * Reset the error details against a given element.
-         * Since the error element is currently displayed at the same level as the input
-         * the parent element is used to find the  #errorMessage element for removal.
-         *
-         * By introducing a popover/tooltip error notification it may be possible to get around this.
-         * 
-         * @param  {jQuery} element [The form field to reset the error message for.]
-         */
-        reset: function(element) {
-            element.parent().find('#message').remove();
-            element.attr('style', '');
-        },
-
-        /**
-         * If any error remains in the errorlist then the form is still invalid.
+         * If any error remains in any of the errorlists then the form is still invalid.
          * 
          * @return {Boolean} [True if no errors]
          */
         formValid: function() {
-            return this.options.errorList.length === 0;
+            var valid = true;
+
+            $.each(this.options.errorsMap, function() {
+                if (this.length > 0) {
+                    valid = false;
+                }
+            });
+
+            return valid;
         },
 
         /**
@@ -258,6 +288,9 @@
 
             this.applyRules(this.options.rules, 'rules', this.setValidationRules);
             this.applyRules(this.options.verification, 'verification', this.setVerificationRules);
+
+            this.options.errorsMap['rules'] = [];
+            this.options.errorsMap['verification'] = [];
 
             // Setup event handler for on submit
             if (this.options.onsubmit === true) {
@@ -497,12 +530,12 @@
             },
 
             maxLength: function(value, element, parameter) {
-                element.data('rules').maxLength.message = 'must be less than ' + parameter + ' characters long, currently ' + value.length;
+                element.data('rules').maxLength.message = 'must be no more than ' + parameter + ' characters long, currently ' + value.length;
                 return value.length <= parameter;
             },
 
             minLength: function(value, element, parameter) {
-                element.data('rules').minLength.message = 'must be more than ' + parameter + ' characters long, currently ' + value.length;
+                element.data('rules').minLength.message = 'must be no less than ' + parameter + ' characters long, currently ' + value.length;
                 return value.length >= parameter;
             },
 
@@ -553,6 +586,9 @@
                         validator.updateErrorList(element, 'verification');
                         validator.displayErrors(element, 'verification');
 
+                        if (validator.hasError(element, validator.options.errorsMap['rules'])) {
+                            validator.displayErrors(element, 'rules');
+                        }
                         element.data('verification').ajax.inprogress = false;
                     });
                 }
