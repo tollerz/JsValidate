@@ -562,36 +562,38 @@
          */
         verify: {
             ajax: {
-                ajaxRequest: null,
+                ajaxRequestsStore: {},
                 requestTime: null,
                 ajaxCount: 0,
 
-                // Begin a new Ajax request (an existing request will be aborted).
-                // Thismay require a way of managing different requests based on the urls provided.
+                // Begin a new ajax request and store it against the elements id (since it should always have one);
                 initiate: function(element, url, validator) {
-                    if (this.ajaxRequest !== null) {
-                        this.ajaxRequest.abort();
+                    var elementId = element.prop('id');
+
+                    if (this.ajaxRequestsStore[elementId] !== null && this.ajaxRequestsStore[elementId] !== undefined) {
+                        this.ajaxRequestsStore[elementId].abort();
                         this.ajaxCount--;
                     } 
+
                     clearTimeout(this.requestTimer);
 
-                    this.requestTimer = setTimeout(this.request(url), 350);
-                    this.response(element, validator);
+                    this.requestTimer = setTimeout(this.request(url, elementId), 350);
+                    this.response(element, elementId, validator);
                 },
 
                 // Initiate an ajax request.
-                request: function(url) {  
+                request: function(url, elementId) {  
                     this.ajaxCount++;
-                    this.ajaxRequest = $.ajax({
+                    this.ajaxRequestsStore[elementId] = $.ajax({
                         type:'GET',
                         url: url
                     });
                 },
 
                 // Deal with the ajax response.
-                response: function(element, validator) {
+                response: function(element, elementId, validator) {
                     var $this = this;
-                    this.ajaxRequest.done(function(data) {
+                    this.ajaxRequestsStore[elementId].done(function(data) {
                         var value = $.parseJSON(data);
 
                         valid = value === 'true' || value === true;
@@ -606,7 +608,7 @@
                         }
 
                         $this.ajaxCount--;
-                        $this.ajaxRequest = null;
+                        $this.ajaxRequestsStore[elementId] = null;
                     });
                 }
             }
