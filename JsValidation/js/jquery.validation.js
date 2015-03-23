@@ -50,12 +50,8 @@
         /**
          * The init function runs all validate and verify rules.
          */
-        validation: function() {
-            this.options.errorsMap['rules'] = [];
-            this.options.errorsMap['verification'] = [];
-
-            this.checkAll(this.options.rules);
-            this.checkAll(this.options.verification);
+        validation: function(checkType) {
+            this.checkAll(this.options[checkType]);
         },
 
         /**
@@ -180,8 +176,7 @@
          * Remove a form fields id from the list of elements failing validation.
          * 
          * @param  {String} elementName [The id of the form field]
-         * @param  {Array}  list        [The list of errors to update]
-         * @param  {String} checkType   [The type of check]
+         * @param  {Array}  list    [The list of errors to update]
          */
         removeError: function(element, list, checkType) {
             var invalidElement = false;
@@ -294,8 +289,21 @@
 
             // Setup event handler for on submit
             if (this.options.onsubmit === true) {
-                $this.seteventhandler(this.$form, 'submit');
+                $this.submitHandler(this.$form);
             }
+        },
+
+        /**
+         * The validator must handle the submission of the form so that it is not submit until after 
+         * all the validation has complete, to do this the submit button must be disabled.
+         * 
+         * @param  {Element} form [the form being validated]
+         */
+        submitHandler: function(form) {
+            //disable the existing submit button.
+            var submitButton = $('input[type=submit]', form);
+            submitButton.prop('type', 'button').prop('name', 'name');
+            this.seteventhandler(submitButton, 'submit');
         },
 
         /**
@@ -404,38 +412,23 @@
             }
 
             if (inputType === 'submit'){
-                input.on(
-                    'submit',
-                    function( event ) {
-                        $this.onsubmit(event);
+                input.off('click').on(
+                    'click',
+                    function() {
+                        $this.onsubmit();
                     });
             }
-
         },
 
         /**
          * Manage on submit event
          * This will need to ensure that Ajax scripts have finished before submitting.
-         * 
-         * @param  {Event} event   [The submit event]
-         * @return {Boolean}       [Return false if the form is not ready to be submitted.]
          */
-        onsubmit:function(event) {
-            //If debug mode set then never submit the form.
-            if (this.options.debug) {
-                event.preventDefault();
-                return false;
-            } 
-
-            this.validation();
-
-            // if Ajax requests not complete do not submit.
-            // (code to check Ajax need to goes here)
-    
-            if(!this.formValid()){
-                event.preventDefault();
-                return false;
-            }
+        onsubmit:function() {
+            var form = this.$form;
+       
+            this.validation('rules');
+            this.submitForm(form); 
         },
 
         /**
@@ -452,6 +445,24 @@
          */
         onchange: function(element) {
             this.checkElement(element);
+        },
+
+        /**
+         * If all the ajaxRequests are complete and the form is valid then submit.
+         * @param  {Element} form [The form being validated]
+         */
+        submitForm: function(form) {
+            var $this = this;
+
+            if (this.verify.ajax.ajaxCount !== 0) {
+                setTimeout(function(){$this.submitForm(form)}, 200);
+            }
+            else {
+                if ($this.formValid()) {
+                    form.submit();
+                }
+                return true;
+            }
         },
 
         /**
@@ -553,23 +564,24 @@
             ajax: {
                 ajaxRequest: null,
                 requestTime: null,
+                ajaxCount: 0,
 
                 // Begin a new Ajax request (an existing request will be aborted).
                 // Thismay require a way of managing different requests based on the urls provided.
                 initiate: function(element, url, validator) {
                     if (this.ajaxRequest !== null) {
                         this.ajaxRequest.abort();
+                        this.ajaxCount--;
                     } 
                     clearTimeout(this.requestTimer);
-
-                    element.data('verification').ajax.inprogress = true;
 
                     this.requestTimer = setTimeout(this.request(url), 350);
                     this.response(element, validator);
                 },
 
                 // Initiate an ajax request.
-                request: function(url) {                 
+                request: function(url) {  
+                    this.ajaxCount++;
                     this.ajaxRequest = $.ajax({
                         type:'GET',
                         url: url
@@ -578,9 +590,12 @@
 
                 // Deal with the ajax response.
                 response: function(element, validator) {
+                    var $this = this;
                     this.ajaxRequest.done(function(data) {
                         var value = $.parseJSON(data);
+
                         valid = value === 'true' || value === true;
+
                         element.data('verification').ajax.valid = valid;
 
                         validator.updateErrorList(element, 'verification');
@@ -589,15 +604,15 @@
                         if (validator.hasError(element, validator.options.errorsMap['rules'])) {
                             validator.displayErrors(element, 'rules');
                         }
-                        element.data('verification').ajax.inprogress = false;
+
+                        $this.ajaxCount--;
+                        $this.ajaxRequest = null;
                     });
                 }
             }
         }
     };
 
-    // A really lightweight plugin wrapper around the constructor, 
-    // preventing multiple instantiations.
     /**
      * A lightweight plugin wrapper around the constructor, 
      * preventing multiple instantiations.
