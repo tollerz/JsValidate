@@ -167,4 +167,6 @@ describe("Setup rules", function() {
         expect(rules).toEqual(expectedRules);
     });
     
+    //TODO: Add tests for building rules based on HTML5 form attributes.
+    
 });

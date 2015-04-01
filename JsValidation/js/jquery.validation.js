@@ -21,7 +21,8 @@
         onchangeElements: ['select', 'checkbox', 'file', 'textarea'],
         onkeyupElements: ['text', 'textarea'],
         passList: [],
-        errorsMap: {} // A map to store multiple errorLists based on the type of check being ran.
+        errorsMap: {}, // A map to store multiple errorLists based on the type of check being ran.
+        inFocus: false
     };
 
     /**
@@ -91,7 +92,8 @@
                     $this.verifyCheck(value, element, $this);
                 });
             }
-
+            
+            
             $this.updateErrorList(element, 'rules');
             $this.displayErrors(element, 'rules');
         },
@@ -233,21 +235,24 @@
             var selector = element.prop('id');
             var errorEnabled = false;
             var formatElement = element;
-
+           
             if ($(element).prop('tagName').toLowerCase() === 'select' && (element.prev('div').hasClass('select2-container'))) {
-                formatElement = $(element.prev('div'));
+                formatElement = $(element.prev('div')).attr('tabindex', '-1');
             }
 
             $this.removeErrorMessage(formatElement);
             
             if ($this.hasError(element, $this.options.errorsMap[checkType])) {
-                
                 $.each(element.data(checkType), function(ruleType, details) {
                     
-                    if (!details.valid && !errorEnabled) {
+                    if (!details.valid && !errorEnabled) {                  	
                         formatElement.parent().append($this.createErrorMessage(details.message));
                         if ($this.options.highlight) {
                             formatElement.css('border', '2px solid #b94a48');
+                        }
+                        if(!$this.options.inFocus) {
+                        	formatElement.focus();
+                        	$this.options.inFocus = true;
                         }
 
                         errorEnabled = true;
@@ -428,7 +433,8 @@
          */
         onsubmit:function() {
             var form = this.$form;
-       
+            this.options.inFocus = false;
+            
             this.validation('rules');
             this.submitForm(form); 
         },
@@ -448,7 +454,7 @@
         onchange: function(element) {
             this.checkElement(element);
         },
-
+        
         /**
          * If all the ajaxRequests are complete and the form is valid then submit.
          * @param  {Element} form [The form being validated]
