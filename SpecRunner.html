@@ -17,14 +17,31 @@
   <script type="text/javascript" src="JsValidation/js/jquery.validation.js"></script>
   
   <!-- include spec files here... -->
-  <script type="text/javascript" src="spec/spec.js"></script>
+  <script type="text/javascript" src="spec/setupSpec.js"></script>
 
 </head>
 
-<body>
-
-    <form id="testform">
+<body style="visiblity:none">
+    <form id="singleInputNoValueform">
+        <input type="text" id="testInput1" value="">
+    </form>
+    
+    <form id="singleInputValueform">
         <input type="text" id="testInput1" value="test">
+    </form>
+    
+    <form id="singleSelectUnselectedForm">
+        <select id="testSelect">
+            <option value="1">test</option>
+            <option value="2">test</option>
+        </select>
+    </form>
+    
+    <form id="singleSelectselectedForm">
+        <select id="testSelect">
+            <option value="1" selected>test</option>
+            <option value="2">test</option>
+        </select>
     </form>
 </body>
 </html>

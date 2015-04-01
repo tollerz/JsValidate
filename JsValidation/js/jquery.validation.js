@@ -280,7 +280,10 @@
         prepareForm: function() {
             var $this = this;
             var form = $this.$form;
-
+            
+            // Add novalidate tag for HTML5 compatible browsers.
+            form.attr( "novalidate", "novalidate" );
+            
             this.applyRules(this.options.rules, 'rules', this.setValidationRules);
             this.applyRules(this.options.verification, 'verification', this.setVerificationRules);
 
@@ -365,8 +368,7 @@
                 verficationChecks[check] = {
                             'message'    : value[0],
                             'url'        : value[1],
-                            'valid'      : false,
-                            'inprogress' : false
+                            'valid'      : false
                          }
             });
 
