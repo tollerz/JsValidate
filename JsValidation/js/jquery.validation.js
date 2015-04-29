@@ -16,7 +16,7 @@
         debug: false,
         onchange: true,
         valid: false,
-        onsubmit: true,
+        submitHandler: "",
         highlight: true,
         onchangeElements: ['select', 'checkbox', 'file', 'textarea'],
         onkeyupElements: ['text', 'textarea'],
@@ -31,6 +31,8 @@
      * @param {Object} options [The options provided by the user for the forms validation.]
      */
     function Validate( form, options) {
+        $this = this;
+
         this.$form = $(form);
         
         this.options = $.extend( {}, defaults, options);
@@ -61,7 +63,7 @@
          */
         checkAll: function(checks) {
             var form = this.$form;
-            var $this = this;
+            
 
             $.each(checks, function(element, value) {
                 var element = $(form.find('#' + element));
@@ -74,7 +76,6 @@
          * @param  {jQuery} element [The element selected by jQuery.]
          */
         checkElement: function(element) {
-            var $this = this;
             var value = $this.elementValue(element);
             var validationChecks = element.data('rules');
             var verificationChecks = element.data('verification');
@@ -138,7 +139,6 @@
          * @param  {String} checkType [The type of check to lookup the validity for]
          */
         updateErrorList: function(element, checkType) {
-            var $this = this;
             var errorList = this.options.errorsMap[checkType];
             var elementName = element.prop('id');
 
@@ -231,7 +231,6 @@
          * @param  {String} checkType [The type of check]
          */
         displayErrors: function(element, checkType) {
-            var $this = this;
             var selector = element.prop('id');
             var errorEnabled = false;
             var formatElement = element;
@@ -245,14 +244,14 @@
             if ($this.hasError(element, $this.options.errorsMap[checkType])) {
                 $.each(element.data(checkType), function(ruleType, details) {
                     
-                    if (!details.valid && !errorEnabled) {                  	
+                    if (!details.valid && !errorEnabled) {                      
                         formatElement.parent().append($this.createErrorMessage(details.message));
                         if ($this.options.highlight) {
                             formatElement.css('border', '2px solid #b94a48');
                         }
                         if(!$this.options.inFocus) {
-                        	formatElement.focus();
-                        	$this.options.inFocus = true;
+                            formatElement.focus();
+                            $this.options.inFocus = true;
                         }
 
                         errorEnabled = true;
@@ -283,24 +282,26 @@
          * property and applying the required event handlers.
          */
         prepareForm: function() {
-            var $this = this;
             var form = $this.$form;
             
             // Add novalidate tag for HTML5 compatible browsers.
             form.attr( "novalidate", "novalidate" );
-            
+
             this.applyRules(this.options.rules, 'rules', this.setValidationRules);
             this.applyRules(this.options.verification, 'verification', this.setVerificationRules);
 
             this.options.errorsMap['rules'] = [];
             this.options.errorsMap['verification'] = [];
 
-            // Setup event handler for on submit
-            if (this.options.onsubmit === true) {
-                $this.submitHandler(this.$form);
+            // If a submit handler has been provided then do not submit the form.
+            if(this.options.submitHandler !== "") {
+                form.off('submit').on('submit', function(event) {
+                    event.preventDefault();
+                });
             }
+            // Setup event handler for on submit
+            $this.submitHandler(form);
         },
-
         /**
          * The validator must handle the submission of the form so that it is not submit until after 
          * all the validation has complete, to do this the submit button must be disabled.
@@ -323,11 +324,8 @@
          * @param  {Function} buildCheckDetails  [The function to build check details to set against the form field]
          */
         applyRules: function(options, checkType, buildCheckDetails) {
-            var $this = this;
-            var form = $this.$form;
-
             $.each(options, function(id, check){
-                var input = $(form.find('#' + id));
+                var input = $($this.$form.find('#' + id));
                 var inputType = $this.inputtype(input);
 
                 if (!$this.validinputtype(input)){
@@ -347,7 +345,6 @@
          * @param {Object} checks [The checks]
          */
         setValidationRules: function(checks) {
-            var $this = this;
             var validationChecks = {};
 
             $.each(checks, function(check, value) {
@@ -366,7 +363,6 @@
          * @param {Object} checks [The checks]
          */
         setVerificationRules: function(checks) {
-            var $this = this;
             var verficationChecks = {};
             
             $.each(checks, function(check, value) {
@@ -397,9 +393,7 @@
          * @param  {jQuery} input     [The form field to set the event handler too.]
          * @param  {String} inputType [the type of form field input e.g. 'text', 'textarea', 'select' etc...]
          */
-        seteventhandler: function(input, inputType) {
-            var $this = this;
-            
+        seteventhandler: function(input, inputType) {            
             if (this.options.onchange) {
                 if ($.inArray(inputType, this.options.onchangeElements) !== -1) {
                     input.off('change').on(
@@ -432,11 +426,9 @@
          * This will need to ensure that Ajax scripts have finished before submitting.
          */
         onsubmit:function() {
-            var form = this.$form;
             this.options.inFocus = false;
-            
             this.validation('rules');
-            this.submitForm(form); 
+            this.submitForm(this.$form); 
         },
 
         /**
@@ -460,14 +452,22 @@
          * @param  {Element} form [The form being validated]
          */
         submitForm: function(form) {
-            var $this = this;
-
             if (this.verify.ajax.ajaxCount !== 0) {
                 setTimeout(function(){$this.submitForm(form)}, 200);
             }
             else {
-                if ($this.formValid()) {
-                    form.submit();
+                // If a submit handler has been provided use that instead of a default form submit.
+                if($this.options.submitHandler !== "" && typeof($this.options.submitHandler) === "function" ) {
+                    if ($this.formValid()) {
+                        console.info('Calling provided Submit Handler for form submission.')
+                        $this.options.submitHandler();
+                    }
+                }
+                else {
+                    if ($this.formValid()) {
+                        console.info('Submitting form by default submit event');
+                        form.submit();
+                    }
                 }
                 return true;
             }
@@ -600,7 +600,6 @@
 
                 // Deal with the ajax response.
                 response: function(element, elementId, validator) {
-                    var $this = this;
                     this.ajaxRequestsStore[elementId].done(function(data) {
                         var value = $.parseJSON(data);
 

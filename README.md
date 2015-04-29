@@ -3,4 +3,16 @@
 
 A customisable jQuery form validation plugin.<br>
 
-Still under alpha development.
+<h4><u>Usage</u></h4>
+<pre>
+    $('form').validate({
+        rules: {
+            inputElementId: {
+                minLength: 10
+            },
+            selectElementId: {
+                required: 'Custom required message'
+            }
+        }
+    });
+</pre>
