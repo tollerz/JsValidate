@@ -1,6 +1,6 @@
 describe("Setup rules", function() {
     var eventNamespace = 'validation';
-    
+  
     /**
      * Function to destroy the plugin instance on an element, so it may be instantiated again.
      */
@@ -14,8 +14,14 @@ describe("Setup rules", function() {
 	    }
     } 
     
-    beforeEach(function () {   	
+    beforeEach(function () {  
     	destroyPlugin($('form'));
+    	
+    	testVariable = ''
+    	
+    	$('form').on('submit', function(){
+    		testVariable = 'submitted';
+    	});
     });
     
     /**
@@ -166,6 +172,80 @@ describe("Setup rules", function() {
         expect(verification).toEqual(expectedVerification);
         expect(rules).toEqual(expectedRules);
     });
+    
+    /**
+     * Test that the submit handler, if specified, is called when the form is valid.
+     */
+    it('submit handler run when validation passed', function() {
+    	$('#singleInputValueform').validate({
+    		submitHandler: function(){ return testVariable = 'test'; }
+    	});
+    	
+    	// manually submit the form
+    	$('#singleInputValueform').find('#submit').click();
+
+    	expect(testVariable).toEqual('test');
+    });
+    
+    /**
+     * Test that the submit handler, if specified, is not called when the form is invalid.
+     */
+    it('submit handler not run when validation fails', function() {
+    	$('#singleInputNoValueform').validate({
+    		submitHandler: function(){ return testVariable = 'test'; },
+            rules: {
+                testInput1: {
+                    required: 'input 1 required'
+                }
+            }
+    	});
+    	
+    	// manually submit the form
+    	$('#singleInputNoValueform').find('#submit').click();
+
+    	expect(testVariable).toEqual('');
+    });
+    
+    /**
+     * Test that when debug option set to true the form does not submit
+     */
+    it('no submit when in debug mode', function() {
+    	$('#singleInputValueform').validate({
+    		debug: true,
+            rules: {
+                testInput1: {
+                    required: 'input 1 required'
+                }
+            }
+    	});
+    	
+    	// manually submit the form
+    	$('#singleInputValueform').find('#submit').click();
+
+    	expect(testVariable).toEqual('');
+    });  
+    
+    /**
+     * Test that when debug option set to false the form does submit
+     */
+    it('submit when not debug mode', function() {
+    	$('#singleInputValueform').validate({
+    		debug: false,
+            rules: {
+                testInput1: {
+                    required: 'input 1 required'
+                }
+            }
+    	});
+    	
+    	// manually submit the form
+    	$('#singleInputValueform').find('#submit').click();
+
+    	expect(testVariable).toEqual('submitted');
+    });    
+    // Test Highlight
+    
+    // Test onChange
     
     //TODO: Add tests for building rules based on HTML5 form attributes.
     

@@ -94,7 +94,6 @@
                 });
             }
             
-            
             $this.updateErrorList(element, 'rules');
             $this.displayErrors(element, 'rules');
         },
@@ -459,12 +458,18 @@
                 // If a submit handler has been provided use that instead of a default form submit.
                 if($this.options.submitHandler !== "" && typeof($this.options.submitHandler) === "function" ) {
                     if ($this.formValid()) {
+                    	if($this.options.debug){
+                    		return;
+                    	}
                         console.info('Calling provided Submit Handler for form submission.')
                         $this.options.submitHandler();
                     }
                 }
                 else {
                     if ($this.formValid()) {
+                    	if($this.options.debug){
+                    		return;
+                    	}
                         console.info('Submitting form by default submit event');
                         form.submit();
                     }
