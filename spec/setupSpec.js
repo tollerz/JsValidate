@@ -17,7 +17,7 @@ describe("Setup rules", function() {
     beforeEach(function () {  
     	destroyPlugin($('form'));
     	
-    	testVariable = ''
+    	testVariable = '';
     	
     	$('form').on('submit', function(){
     		testVariable = 'submitted';
@@ -184,7 +184,7 @@ describe("Setup rules", function() {
     	// manually submit the form
     	$('#singleInputValueform').find('#submit').click();
 
-    	expect(testVariable).toEqual('test');
+    	expect('test').toEqual(testVariable);
     });
     
     /**
@@ -203,32 +203,13 @@ describe("Setup rules", function() {
     	// manually submit the form
     	$('#singleInputNoValueform').find('#submit').click();
 
-    	expect(testVariable).toEqual('');
+    	expect('').toEqual(testVariable);
     });
-    
-    /**
-     * Test that when debug option set to true the form does not submit
-     */
-    it('no submit when in debug mode', function() {
-    	$('#singleInputValueform').validate({
-    		debug: true,
-            rules: {
-                testInput1: {
-                    required: 'input 1 required'
-                }
-            }
-    	});
-    	
-    	// manually submit the form
-    	$('#singleInputValueform').find('#submit').click();
 
-    	expect(testVariable).toEqual('');
-    });  
-    
     /**
      * Test that when debug option set to false the form does submit
      */
-    it('submit when not debug mode', function() {
+    it('submit when not in debug mode', function() {
     	$('#singleInputValueform').validate({
     		debug: false,
             rules: {
@@ -241,8 +222,30 @@ describe("Setup rules", function() {
     	// manually submit the form
     	$('#singleInputValueform').find('#submit').click();
 
-    	expect(testVariable).toEqual('submitted');
-    });    
+    	expect('submitted').toEqual(testVariable);
+    }); 
+    
+//    /**
+//     * Test that when debug option set to true the form does not submit
+//     */
+//    it('do not submit form when in debug mode', function() {
+//    	$('#singleInputValueform').validate({
+//    		debug: true,
+//            rules: {
+//                testInput1: {
+//                    required: 'input 1 required'
+//                }
+//            }
+//    	});
+//    	
+//    	// manually submit the form
+//    	$('#singleInputValueform').find('#submit').click();
+//
+//    	expect(testVariable).toEqual('');
+//    });  
+    
+   
+    
     // Test Highlight
     
     // Test onChange
